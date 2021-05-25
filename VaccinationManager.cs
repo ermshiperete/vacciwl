@@ -10,7 +10,9 @@ namespace Impfterminportal
 {
 	public class VaccinationManager
 	{
-		private FirefoxDriver _driver;
+		private       FirefoxDriver _driver;
+		private const int           FirstShot  = 1;
+		private const int           SecondShot = 2;
 
 		public void Main(string user, string password, string impfZentrum)
 		{
@@ -21,15 +23,12 @@ namespace Impfterminportal
 				SelectImpfzentrum(impfZentrum);
 
 				_driver.WaitForElement(By.ClassName("appointmentContentContainer"));
-				if (SelectFirstAvailableSlot())
+				for (var success = BookSlotsIfAvailable();
+					!success && SelectNextDay();
+					)
 				{
-					if (SelectFirstAvailableSlot(By.XPath("//div[contains(@class, 'dosage') and position() = 2]")))
-						Console.WriteLine("Found slots!");
-					else
-						Console.WriteLine("No slots for second shot");
+					success = BookSlotsIfAvailable();
 				}
-				else
-					Console.WriteLine("No slots");
 			}
 			finally
 			{
@@ -37,23 +36,75 @@ namespace Impfterminportal
 			}
 		}
 
-		private bool SelectFirstAvailableSlot(By by = null)
+		private bool SelectNextDay()
 		{
-			var slotName = By.ClassName("appointmentSlot");
-			IReadOnlyCollection<IWebElement> availableSlots;
-			if (by == null)
-				availableSlots = _driver.FindElements(slotName);
-			else
+			bool SelectNextDayInRow(ReadOnlyCollection<IWebElement> readOnlyCollection)
 			{
-				var secondShotDiv = _driver.WaitAndFindElement(by);
-				availableSlots = secondShotDiv.FindElements(slotName);
+				if (readOnlyCollection.Count <= 0 || readOnlyCollection.First().IsDisabled())
+					return false;
+
+				readOnlyCollection.First().Click();
+				return true;
 			}
+
+			var nextDays = _driver.FindElements(By.XPath("//td[contains(@class, 'selectedDate')]/following-sibling::td/button"));
+			if (SelectNextDayInRow(nextDays))
+				return true;
+
+			nextDays = _driver.FindElements(By.XPath(
+				"//td[contains(@class, 'selectedDate')]/parent::tr/following-sibling::tr/td/button"));
+			if (SelectNextDayInRow(nextDays))
+				return true;
+
+			// at end of month
+			var goNext = _driver.FindElement(By.Id("goNext"));
+			if (goNext.IsDisabled())
+				return false;
+			goNext.Click();
+			return true;
+		}
+
+		private bool BookSlotsIfAvailable()
+		{
+			var firstDiv = GetDivForShot(FirstShot);
+			var firstDate = GetSelectedDate(firstDiv);
+			if (SelectNextAvailableSlot(FirstShot))
+			{
+				var secondDiv = GetDivForShot(SecondShot);
+				var secondDate = GetSelectedDate(secondDiv);
+				if (SelectNextAvailableSlot(SecondShot))
+				{
+					Console.WriteLine($"Found slots on {firstDate} and {secondDate}!");
+					return true;
+				}
+				Console.WriteLine($"No slots for second shot on {secondDate}");
+			}
+			else
+				Console.WriteLine($"No slots on {firstDate}");
+
+			return false;
+		}
+
+		private static string GetSelectedDate(IWebElement element)
+		{
+			return element.FindElement(By.XPath("descendant::td[contains(@class, 'selectedDate')]/button")).GetAttribute("aria-label");
+		}
+
+		private bool SelectNextAvailableSlot(int shotNumber)
+		{
+			var shotDiv = GetDivForShot(shotNumber);
+			var availableSlots = shotDiv.FindElements(By.ClassName("appointmentSlot"));
 
 			if (availableSlots.Count <= 0)
 				return false;
 
 			availableSlots.First().Click();
 			return true;
+		}
+
+		private IWebElement GetDivForShot(int shotNumber)
+		{
+			return _driver.WaitAndFindElement(By.XPath($"//div[contains(@class, 'dosage') and position() = {shotNumber}]"));
 		}
 
 		private void SelectImpfzentrum(string impfZentrum)

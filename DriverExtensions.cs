@@ -14,7 +14,12 @@ namespace Impfterminportal
 		{
 			var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(20));
 			return wait.Until(d => d.FindElement(by));
+		}
 
+		public static bool WaitForElement(this FirefoxDriver driver, By by)
+		{
+			var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(20));
+			return wait.Until(d => d.FindElement(by)) != null;
 		}
 	}
 }

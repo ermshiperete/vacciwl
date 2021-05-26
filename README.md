@@ -1,4 +1,4 @@
-# Impfterminportal
+# Automated Vaccination Appointment Scheduler
 
 ## Requirements
 

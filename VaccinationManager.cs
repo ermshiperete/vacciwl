@@ -20,19 +20,51 @@ namespace Impfterminportal
 			try
 			{
 				Login(user, password);
-				SelectImpfzentrum(impfZentrum);
+				SelectVaccinationCenter(impfZentrum);
 
 				_driver.WaitForElement(By.ClassName("appointmentContentContainer"));
-				for (var success = BookSlotsIfAvailable();
-					!success && SelectNextDay();
-					)
-				{
-					success = BookSlotsIfAvailable();
-				}
+				TryBookSlot();
 			}
 			finally
 			{
 				_driver.Close();
+			}
+		}
+
+		private void Login(string user, string password)
+		{
+			if (_driver.FindElements(By.CssSelector(".sub-avatar")).Count != 0)
+				return;
+
+			_driver.FindElement(By.XPath("//button[contains(.,'Anmelden')]")).Click();
+			_driver.FindElement(By.Id("username")).SendKeys(user);
+			_driver.FindElement(By.Id("password")).SendKeys(password);
+			_driver.FindElement(By.XPath("//button[contains(.,'Anmelden')]")).Click();
+		}
+
+		private void SelectVaccinationCenter(string vaccinationCenter)
+		{
+			_driver.WaitAndFindElement(By.XPath("//button[contains(.,'Termin buchen')]")).Click();
+			_driver.WaitAndFindElement(By.XPath("//a[contains(.,'Nachschlagen mit Liste')]")).Click();
+			_driver.FindElement(By.Id("s2id_autogen8_search")).SendKeys(vaccinationCenter);
+			IWebElement result;
+			for (result = _driver.WaitAndFindElement(By.ClassName("select2-result-label"));
+				!result.Text.Contains(vaccinationCenter, StringComparison.OrdinalIgnoreCase);
+				result = _driver.WaitAndFindElement(By.ClassName("select2-result-label")))
+			{
+				Thread.Sleep(100);
+			}
+
+			result.Click();
+		}
+
+		private void TryBookSlot()
+		{
+			for (var success = BookSlotsIfAvailable();
+				!success && SelectNextDay(GetDivXPathForShot(FirstShot));
+				)
+			{
+				success = BookSlotsIfAvailable();
 			}
 		}
 
@@ -42,15 +74,14 @@ namespace Impfterminportal
 			var firstDate = GetSelectedDate(firstDivXPath);
 			if (SelectNextAvailableSlot(FirstShot))
 			{
-				Console.Write($"Found available slot on {firstDate}, looking for slots for second shot... ");
-				var secondDivXPath = GetDivXPathForShot(SecondShot);
-				var secondDate = GetSelectedDate(secondDivXPath);
-				if (SelectNextAvailableSlot(SecondShot))
+				Console.WriteLine($"Found available slot on {firstDate}, looking for slots for second shot...");
+				for (var success = SelectNextAvailableSecondSlot(firstDate);
+					!success && SelectNextDay(GetDivXPathForShot(SecondShot));
+					)
 				{
-					Console.WriteLine($"Found slots on {firstDate} and {secondDate}!");
-					return true;
+					if (SelectNextAvailableSecondSlot(firstDate))
+						return true;
 				}
-				Console.WriteLine($"No slots for second shot on {secondDate}");
 			}
 			else
 				Console.WriteLine($"No slots on {firstDate}");
@@ -58,7 +89,7 @@ namespace Impfterminportal
 			return false;
 		}
 
-		private bool SelectNextDay()
+		private bool SelectNextDay(string divXPath)
 		{
 			static bool SelectNextDayInRow(IReadOnlyCollection<IWebElement> readOnlyCollection)
 			{
@@ -70,17 +101,17 @@ namespace Impfterminportal
 				return true;
 			}
 
-			var nextDays = _driver.FindElements(By.XPath("//td[contains(@class, 'selectedDate')]/following-sibling::td/button"));
+			var nextDays = _driver.FindElements(By.XPath($"{divXPath}//td[contains(@class, 'selectedDate')]/following-sibling::td/button"));
 			if (SelectNextDayInRow(nextDays))
 				return true;
 
 			nextDays = _driver.FindElements(By.XPath(
-				"//td[contains(@class, 'selectedDate')]/parent::tr/following-sibling::tr/td/button"));
+				$"{divXPath}//td[contains(@class, 'selectedDate')]/parent::tr/following-sibling::tr/td/button"));
 			if (SelectNextDayInRow(nextDays))
 				return true;
 
 			// at end of month
-			var goNext = _driver.FindElement(By.Id("goNext"));
+			var goNext = _driver.WaitAndFindElement(By.XPath($"{divXPath}//button[@id = 'goNext']"));
 			if (goNext.IsDisabled())
 				return false;
 			goNext.Click();
@@ -91,6 +122,21 @@ namespace Impfterminportal
 		private string GetSelectedDate(string xpathForShot)
 		{
 			return _driver.WaitAndFindElement(By.XPath($"{xpathForShot}/descendant::td[contains(@class, 'selectedDate')]/button")).GetAttribute("aria-label");
+		}
+
+		private bool SelectNextAvailableSecondSlot(string firstDate)
+		{
+			var secondDivXPath = GetDivXPathForShot(SecondShot);
+			var secondDate = GetSelectedDate(secondDivXPath);
+			if (SelectNextAvailableSlot(SecondShot))
+			{
+				Console.WriteLine(
+					$"Congratulations! Reserved slots on {firstDate} and {secondDate}!");
+				_driver.FindElement(By.XPath("//button[contains(.,'Absenden')]")).Click();
+				return true;
+			}
+			Console.WriteLine($"\tNo slots for second shot on {secondDate}");
+			return false;
 		}
 
 		private bool SelectNextAvailableSlot(int shotNumber)
@@ -108,33 +154,6 @@ namespace Impfterminportal
 		private static string GetDivXPathForShot(int shotNumber)
 		{
 			return $"//div[contains(@class, 'dosage') and position() = {shotNumber}]";
-		}
-
-		private void SelectImpfzentrum(string impfZentrum)
-		{
-			_driver.WaitAndFindElement(By.XPath("//button[contains(.,'Termin buchen')]")).Click();
-			_driver.WaitAndFindElement(By.XPath("//a[contains(.,'Nachschlagen mit Liste')]")).Click();
-			_driver.FindElement(By.Id("s2id_autogen8_search")).SendKeys(impfZentrum);
-			IWebElement result;
-			for (result = _driver.WaitAndFindElement(By.ClassName("select2-result-label"));
-				!result.Text.Contains(impfZentrum, StringComparison.OrdinalIgnoreCase);
-				result = _driver.WaitAndFindElement(By.ClassName("select2-result-label")))
-			{
-				Thread.Sleep(100);
-			}
-
-			result.Click();
-		}
-
-		private void Login(string user, string password)
-		{
-			if (_driver.FindElements(By.CssSelector(".sub-avatar")).Count != 0)
-				return;
-
-			_driver.FindElement(By.XPath("//button[contains(.,'Anmelden')]")).Click();
-			_driver.FindElement(By.Id("username")).SendKeys(user);
-			_driver.FindElement(By.Id("password")).SendKeys(password);
-			_driver.FindElement(By.XPath("//button[contains(.,'Anmelden')]")).Click();
 		}
 	}
 }

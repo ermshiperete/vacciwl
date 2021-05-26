@@ -5,7 +5,7 @@ using System.Threading;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
 
-namespace Impfterminportal
+namespace VaccinationAppointmentScheduler
 {
 	class Program
 	{

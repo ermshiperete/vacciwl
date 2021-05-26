@@ -6,7 +6,7 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Support.UI;
 
-namespace Impfterminportal
+namespace VaccinationAppointmentScheduler
 {
 	public static class DriverExtensions
 	{

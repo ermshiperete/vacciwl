@@ -1,6 +1,6 @@
 using OpenQA.Selenium;
 
-namespace Impfterminportal
+namespace VaccinationAppointmentScheduler
 {
 	public static class WebElementExtensions
 	{

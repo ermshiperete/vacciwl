@@ -10,17 +10,29 @@ namespace VaccinationAppointmentScheduler
 {
 	public class VaccinationManager
 	{
-		private       FirefoxDriver _driver;
 		private const int           FirstShot  = 1;
 		private const int           SecondShot = 2;
+		private       FirefoxDriver _driver;
+		private readonly bool       _headless;
+		private readonly string     _url;
 
-		public void Main(string user, string password, string impfZentrum)
+		public VaccinationManager(string url, bool headless = true)
 		{
-			_driver = new FirefoxDriver(".") { Url = "https://itm-wl.service-now.com/vam" };
+			_headless = headless;
+			_url = url;
+		}
+
+		public void Main(string user, string password, string vaccinationCenter)
+		{
+			var options = new FirefoxOptions();
+			if (_headless)
+				options.AddArguments("--headless");
+
+			_driver = new FirefoxDriver(".", options) { Url = _url };
 			try
 			{
 				Login(user, password);
-				SelectVaccinationCenter(impfZentrum);
+				SelectVaccinationCenter(vaccinationCenter);
 
 				_driver.WaitForElement(By.ClassName("appointmentContentContainer"));
 				TryBookSlot();

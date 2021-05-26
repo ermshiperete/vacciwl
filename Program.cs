@@ -1,15 +1,12 @@
 ﻿// Copyright (c) 2021 Eberhard Beilharz
 // This software is licensed under the MIT License (http://opensource.org/licenses/MIT)
 using System;
-using System.Threading;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Firefox;
 
 namespace VaccinationAppointmentScheduler
 {
-	class Program
+	static class Program
 	{
-		static void Main(string[] args)
+		private static void Main(string[] args)
 		{
 			var user = Environment.GetEnvironmentVariable("ITM_USER");
 			var password = Environment.GetEnvironmentVariable("ITM_PW");
@@ -19,7 +16,7 @@ namespace VaccinationAppointmentScheduler
 				return;
 			}
 
-			var manager = new VaccinationManager();
+			var manager = new VaccinationManager("https://itm-wl.service-now.com/vam", false);
 			manager.Main(user, password, "siegen-wittgenstein");
 		}
 	}

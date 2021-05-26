@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vacciwl", "vacciwl.csproj", "{CCB88093-C293-4365-93DA-B61A0FC62A4E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CCB88093-C293-4365-93DA-B61A0FC62A4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CCB88093-C293-4365-93DA-B61A0FC62A4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CCB88093-C293-4365-93DA-B61A0FC62A4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CCB88093-C293-4365-93DA-B61A0FC62A4E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

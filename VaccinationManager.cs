@@ -72,12 +72,15 @@ namespace VaccinationAppointmentScheduler
 
 		private void TryBookSlot()
 		{
-			for (var success = BookSlotsIfAvailable();
+			var success = false;
+			for (success = BookSlotsIfAvailable();
 				!success && SelectNextDay(GetDivXPathForShot(FirstShot));
 				)
 			{
 				success = BookSlotsIfAvailable();
 			}
+			if (!success)
+				Console.WriteLine("Finished. No slots on other days available.");
 		}
 
 		private bool BookSlotsIfAvailable()

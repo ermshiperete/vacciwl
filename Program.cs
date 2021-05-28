@@ -8,16 +8,44 @@ namespace VaccinationAppointmentScheduler
 	{
 		private static void Main(string[] args)
 		{
-			var user = Environment.GetEnvironmentVariable("ITM_USER");
-			var password = Environment.GetEnvironmentVariable("ITM_PW");
-			if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(password))
+			var options = new Options();
+			if (!options.HasConfig)
 			{
-				Console.WriteLine("Please set username and password in ITM_USER and ITM_PW environment variables!");
+				if (string.IsNullOrEmpty(options.Username))
+				{
+					options.Username = ReadFromUser("Username: ", options.Username);
+				}
+
+				if (string.IsNullOrEmpty(options.Password))
+				{
+					options.Password = ReadFromUser("Password: ", options.Password);
+				}
+				options.VaccinationCenter = ReadFromUser($"Vaccination Center ({options.VaccinationCenter}): ",
+					options.VaccinationCenter);
+
+				options.Url = ReadFromUser($"Url ({options.Url}): ", options.Url);
+
+				var headlessString = ReadFromUser($"Headless ({options.Headless}): ", options.Headless.ToString());
+				options.Headless = headlessString.ToLower() == "true";
+
+				options.Save();
+			}
+
+			if (string.IsNullOrEmpty(options.Username) || string.IsNullOrEmpty(options.Password))
+			{
+				Console.WriteLine("Invalid username or password");
 				return;
 			}
 
-			var manager = new VaccinationManager("https://itm-wl.service-now.com/vam", false);
-			manager.Main(user, password, "siegen-wittgenstein");
+			var manager = new VaccinationManager(options.Url, options.Headless);
+			manager.Main(options.Username, options.Password, options.VaccinationCenter);
+		}
+
+		private static string ReadFromUser(string prompt, string oldValue)
+		{
+			Console.Write(prompt);
+			var value = Console.ReadLine();
+			return string.IsNullOrEmpty(value) ? oldValue : value;
 		}
 	}
 }

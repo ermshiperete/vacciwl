@@ -40,6 +40,8 @@ namespace VaccinationAppointmentScheduler
 			finally
 			{
 				_driver.Close();
+				_driver.Quit();
+				_driver.Dispose();
 			}
 		}
 

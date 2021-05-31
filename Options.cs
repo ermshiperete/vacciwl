@@ -27,6 +27,7 @@ namespace VaccinationAppointmentScheduler
 			Debug = options.Debug;
 			CheckAllCenters = options.CheckAllCenters;
 			BookAppointment = options.BookAppointment;
+			HeadlessArg = options.HeadlessArg;
 		}
 
 		private string Filename => Path.Combine(
@@ -72,9 +73,12 @@ namespace VaccinationAppointmentScheduler
 
 		public bool Headless
 		{
-			get => Value("Settings", "Headless");
+			get => HeadlessArg || Value("Settings", "Headless");
 			set => SetValue("Settings", "Headless", value);
 		}
+
+		[Option("headless", HelpText = "Run headless")]
+		public bool HeadlessArg { get; private set; }
 
 		[Option("book-appointment", Default = true,
 			HelpText = "book the appointment if true, otherwise just list available appointments.")]

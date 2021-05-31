@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using CommandLine;
 using IniFile;
 
 namespace VaccinationAppointmentScheduler
@@ -8,14 +10,30 @@ namespace VaccinationAppointmentScheduler
 	{
 		private readonly Ini _iniFile;
 
+		// ReSharper disable once MemberCanBePrivate.Global
 		public Options()
 		{
 			_iniFile = HasConfig ? new Ini(Filename) : new Ini();
 		}
 
+		public Options(IEnumerable<string> args): this()
+		{
+			var result = Parser.Default.ParseArguments<Options>(args).WithParsed(RunOptions);
+			HelpRequested = result.Tag == ParserResultType.NotParsed;
+		}
+
+		private void RunOptions(Options options)
+		{
+			Debug = options.Debug;
+			CheckAllCenters = options.CheckAllCenters;
+			BookAppointment = options.BookAppointment;
+		}
+
 		private string Filename => Path.Combine(
 			Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
 			"vacciwl", "config.ini");
+
+		public bool HelpRequested { get; }
 
 		public bool HasConfig => File.Exists(Filename);
 
@@ -58,9 +76,16 @@ namespace VaccinationAppointmentScheduler
 			set => SetValue("Settings", "Headless", value);
 		}
 
-		public bool BookAppointment { get; } = true;
-		public bool CheckAllCenters { get; } = false;
-		public bool Debug { get; } = false;
+		[Option("book-appointment", Default = true,
+			HelpText = "book the appointment if true, otherwise just list available appointments.")]
+		public bool BookAppointment { get; private set; }
+
+		[Option("check-all-centers", Default = false,
+			HelpText = "Check all centers for available appointments instead of just one. Implies --book-appointment=false.")]
+		public bool CheckAllCenters { get; private set;  }
+
+		[Option('d', "debug", Default = false, HelpText = "More verbose output")]
+		public bool Debug { get; private set; }
 
 		private string Value(string sectionName, string key, string defaultValue)
 		{

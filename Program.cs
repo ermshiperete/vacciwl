@@ -8,7 +8,10 @@ namespace VaccinationAppointmentScheduler
 	{
 		private static void Main(string[] args)
 		{
-			var options = new Options();
+			var options = new Options(args);
+			if (options.HelpRequested)
+				return;
+
 			if (!options.HasConfig || string.IsNullOrEmpty(options.Username) || string.IsNullOrEmpty(options.Password))
 			{
 				if (string.IsNullOrEmpty(options.Username))

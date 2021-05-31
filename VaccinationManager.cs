@@ -23,6 +23,9 @@ namespace VaccinationAppointmentScheduler
 		public void Main()
 		{
 			var options = new FirefoxOptions();
+			if (!_options.Debug)
+				options.LogLevel = FirefoxDriverLogLevel.Error;
+
 			if (_options.Headless)
 				options.AddArguments("--headless");
 

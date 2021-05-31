@@ -60,6 +60,7 @@ namespace VaccinationAppointmentScheduler
 
 		public bool BookAppointment { get; } = true;
 		public bool CheckAllCenters { get; } = false;
+		public bool Debug { get; } = false;
 
 		private string Value(string sectionName, string key, string defaultValue)
 		{

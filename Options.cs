@@ -72,6 +72,8 @@ namespace VaccinationAppointmentScheduler
 			if (!_iniFile.TryGetValue(sectionName, out var section))
 				return false;
 
+			if (string.IsNullOrEmpty(section[key]))
+				return false;
 			bool value = section[key];
 			return value;
 		}

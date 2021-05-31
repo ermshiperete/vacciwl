@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using OpenQA.Selenium;
@@ -17,7 +18,13 @@ namespace VaccinationAppointmentScheduler
 		public VaccinationManager(Options options)
 		{
 			_options = options;
+			if (_options.Verbose)
+				Log = new MultiLogger(new Logger(_options.Logfile));
+			else
+				Log = new Logger(_options.Logfile);
 		}
+
+		private ILog Log { get; }
 
 		public void Main()
 		{
@@ -56,6 +63,7 @@ namespace VaccinationAppointmentScheduler
 				_driver.Close();
 				_driver.Quit();
 				_driver.Dispose();
+				Log.Dispose();
 			}
 		}
 
@@ -73,7 +81,7 @@ namespace VaccinationAppointmentScheduler
 		private void SelectVaccinationCenter(string vaccinationCenter)
 		{
 			_driver.WaitAndFindElement(By.XPath("//a[contains(.,'Nachschlagen mit Liste')]")).Click();
-			_driver.FindElement(By.Id("s2id_autogen8_search")).SendKeys(vaccinationCenter);
+			_driver.WaitAndFindElement(By.Id("s2id_autogen8_search")).SendKeys(vaccinationCenter);
 			IWebElement result;
 			for (result = _driver.WaitAndFindElement(By.ClassName("select2-result-label"));
 				!result.Text.Contains(vaccinationCenter, StringComparison.OrdinalIgnoreCase);
@@ -82,7 +90,7 @@ namespace VaccinationAppointmentScheduler
 				Thread.Sleep(100);
 			}
 
-			Console.WriteLine($"Checking {result.Text}:");
+			Log.Message($"Checking {result.Text}:");
 			result.Click();
 		}
 
@@ -91,7 +99,7 @@ namespace VaccinationAppointmentScheduler
 			_driver.WaitAndFindElement(By.XPath("//a[contains(.,'Nachschlagen mit Liste')]")).Click();
 			var result = _driver.WaitAndFindElement(By.ClassName("select2-result-label"));
 
-			Console.WriteLine($"Checking {result.Text}:");
+			Log.Message($"Checking {result.Text}:");
 			result.Click();
 			return true;
 		}
@@ -100,12 +108,12 @@ namespace VaccinationAppointmentScheduler
 		{
 			_driver.WaitAndFindElement(By.Id("s2id_sp_formfield_preferred_center")).Click();
 			var previous = _driver.WaitAndFindElement(By.XPath("//li[contains(@class, 'select2-highlighted')]/div/div"));
-			_driver.FindElement(By.Id("s2id_autogen8_search")).SendKeys(Keys.Down);
+			_driver.WaitAndFindElement(By.Id("s2id_autogen8_search")).SendKeys(Keys.Down);
 			var result = _driver.WaitAndFindElement(By.XPath("//li[contains(@class, 'select2-highlighted')]/div/div"));
 			if (previous.Text == result.Text)
 				return false;
 
-			Console.WriteLine($"Checking {result.Text}:");
+			Log.Message($"Checking {result.Text}:");
 			result.Click();
 			return true;
 		}
@@ -120,7 +128,7 @@ namespace VaccinationAppointmentScheduler
 				success = BookSlotsIfAvailable();
 			}
 			if (!success)
-				Console.WriteLine("\tFinished. No slots on other days available.");
+				Log.Message("\tFinished. No slots on other days available.");
 		}
 
 		private bool BookSlotsIfAvailable()
@@ -129,7 +137,7 @@ namespace VaccinationAppointmentScheduler
 			var firstDate = GetSelectedDate(firstDivXPath);
 			if (SelectNextAvailableSlot(FirstShot))
 			{
-				Console.WriteLine($"\tFound available slot on {firstDate}, looking for slots for second shot...");
+				Log.Message($"\tFound available slot on {firstDate}, looking for slots for second shot...");
 				for (var success = SelectNextAvailableSecondSlot(firstDate);
 					!success && SelectNextDay(GetDivXPathForShot(SecondShot));
 					)
@@ -139,7 +147,7 @@ namespace VaccinationAppointmentScheduler
 				}
 			}
 			else
-				Console.WriteLine($"\tNo slots on {firstDate}");
+				Log.Message($"\tNo slots on {firstDate}");
 
 			return false;
 		}
@@ -187,14 +195,14 @@ namespace VaccinationAppointmentScheduler
 			{
 				if (_options.BookAppointment)
 				{
-					Console.WriteLine($"Congratulations! Reserved slots on {firstDate} and {secondDate}!");
+					Log.Message($"Congratulations! Reserved slots on {firstDate} and {secondDate}!");
 					_driver.FindElement(By.XPath("//button[contains(.,'Absenden')]")).Click();
 					return true;
 				}
-				Console.WriteLine($"Found available slots on {firstDate} and {secondDate}!");
+				Log.Message($"Found available slots on {firstDate} and {secondDate}!");
 				return false;
 			}
-			Console.WriteLine($"\t\tNo slots for second shot on {secondDate}");
+			Log.Message($"\t\tNo slots for second shot on {secondDate}");
 			return false;
 		}
 

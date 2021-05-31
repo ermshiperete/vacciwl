@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using CommandLine;
 using IniFile;
+using OpenQA.Selenium.DevTools;
 
 namespace VaccinationAppointmentScheduler
 {
@@ -28,6 +29,8 @@ namespace VaccinationAppointmentScheduler
 			CheckAllCenters = options.CheckAllCenters;
 			BookAppointment = options.BookAppointment;
 			HeadlessArg = options.HeadlessArg;
+			Verbose = options.Verbose;
+			Logfile = options.Logfile ?? Path.Combine(Path.GetTempPath(), "vacciwl.log");
 		}
 
 		private string Filename => Path.Combine(
@@ -88,8 +91,14 @@ namespace VaccinationAppointmentScheduler
 			HelpText = "Check all centers for available appointments instead of just one. Implies --book-appointment=false.")]
 		public bool CheckAllCenters { get; private set;  }
 
+		[Option('v', "verbose", Default = false, HelpText = "Verbose output")]
+		public bool Verbose { get; private set; }
+
 		[Option('d', "debug", Default = false, HelpText = "More verbose output")]
 		public bool Debug { get; private set; }
+
+		[Option("logfile", HelpText = "Logfile name and path")]
+		public string Logfile { get; private set; }
 
 		private string Value(string sectionName, string key, string defaultValue)
 		{

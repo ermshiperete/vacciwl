@@ -37,8 +37,8 @@ namespace VaccinationAppointmentScheduler
 				return;
 			}
 
-			var manager = new VaccinationManager(options.Url, options.Headless);
-			manager.Main(options.Username, options.Password, options.VaccinationCenter);
+			var manager = new VaccinationManager(options);
+			manager.Main();
 		}
 
 		private static string ReadFromUser(string prompt, string oldValue)

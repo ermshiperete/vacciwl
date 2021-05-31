@@ -58,6 +58,9 @@ namespace VaccinationAppointmentScheduler
 			set => SetValue("Settings", "Headless", value);
 		}
 
+		public bool BookAppointment { get; } = true;
+		public bool CheckAllCenters { get; } = false;
+
 		private string Value(string sectionName, string key, string defaultValue)
 		{
 			if (!_iniFile.TryGetValue(sectionName, out var section))

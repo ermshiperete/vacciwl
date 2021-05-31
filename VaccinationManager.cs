@@ -10,32 +10,44 @@ namespace VaccinationAppointmentScheduler
 {
 	public class VaccinationManager
 	{
-		private const int           FirstShot  = 1;
-		private const int           SecondShot = 2;
-		private       FirefoxDriver _driver;
-		private readonly bool       _headless;
-		private readonly string     _url;
+		private const    int           FirstShot  = 1;
+		private const    int           SecondShot = 2;
+		private          FirefoxDriver _driver;
+		private readonly Options       _options;
 
-		public VaccinationManager(string url, bool headless = true)
+		public VaccinationManager(Options options)
 		{
-			_headless = headless;
-			_url = url;
+			_options = options;
 		}
 
-		public void Main(string user, string password, string vaccinationCenter)
+		public void Main()
 		{
 			var options = new FirefoxOptions();
-			if (_headless)
+			if (_options.Headless)
 				options.AddArguments("--headless");
 
-			_driver = new FirefoxDriver(".", options) { Url = _url };
+			_driver = new FirefoxDriver(".", options) { Url = _options.Url };
 			try
 			{
-				Login(user, password);
-				SelectVaccinationCenter(vaccinationCenter);
+				Login(_options.Username, _options.Password);
+				_driver.WaitAndFindElement(By.XPath("//button[contains(.,'Termin buchen')]")).Click();
+				if (_options.CheckAllCenters)
+				{
+					for (var moreCenters = SelectFirstVaccinationCenter();
+						moreCenters;
+						moreCenters = SelectNextVaccinationCenter())
+					{
+						_driver.WaitForElement(By.ClassName("appointmentContentContainer"));
+						TryBookSlot();
+					}
+				}
+				else
+				{
+					SelectVaccinationCenter(_options.VaccinationCenter);
 
-				_driver.WaitForElement(By.ClassName("appointmentContentContainer"));
-				TryBookSlot();
+					_driver.WaitForElement(By.ClassName("appointmentContentContainer"));
+					TryBookSlot();
+				}
 			}
 			finally
 			{
@@ -58,7 +70,6 @@ namespace VaccinationAppointmentScheduler
 
 		private void SelectVaccinationCenter(string vaccinationCenter)
 		{
-			_driver.WaitAndFindElement(By.XPath("//button[contains(.,'Termin buchen')]")).Click();
 			_driver.WaitAndFindElement(By.XPath("//a[contains(.,'Nachschlagen mit Liste')]")).Click();
 			_driver.FindElement(By.Id("s2id_autogen8_search")).SendKeys(vaccinationCenter);
 			IWebElement result;
@@ -69,7 +80,32 @@ namespace VaccinationAppointmentScheduler
 				Thread.Sleep(100);
 			}
 
+			Console.WriteLine($"Checking {result.Text}:");
 			result.Click();
+		}
+
+		private bool SelectFirstVaccinationCenter()
+		{
+			_driver.WaitAndFindElement(By.XPath("//a[contains(.,'Nachschlagen mit Liste')]")).Click();
+			var result = _driver.WaitAndFindElement(By.ClassName("select2-result-label"));
+
+			Console.WriteLine($"Checking {result.Text}:");
+			result.Click();
+			return true;
+		}
+
+		private bool SelectNextVaccinationCenter()
+		{
+			_driver.WaitAndFindElement(By.Id("s2id_sp_formfield_preferred_center")).Click();
+			var previous = _driver.WaitAndFindElement(By.XPath("//li[contains(@class, 'select2-highlighted')]/div/div"));
+			_driver.FindElement(By.Id("s2id_autogen8_search")).SendKeys(Keys.Down);
+			var result = _driver.WaitAndFindElement(By.XPath("//li[contains(@class, 'select2-highlighted')]/div/div"));
+			if (previous.Text == result.Text)
+				return false;
+
+			Console.WriteLine($"Checking {result.Text}:");
+			result.Click();
+			return true;
 		}
 
 		private void TryBookSlot()
@@ -82,7 +118,7 @@ namespace VaccinationAppointmentScheduler
 				success = BookSlotsIfAvailable();
 			}
 			if (!success)
-				Console.WriteLine("Finished. No slots on other days available.");
+				Console.WriteLine("\tFinished. No slots on other days available.");
 		}
 
 		private bool BookSlotsIfAvailable()
@@ -91,7 +127,7 @@ namespace VaccinationAppointmentScheduler
 			var firstDate = GetSelectedDate(firstDivXPath);
 			if (SelectNextAvailableSlot(FirstShot))
 			{
-				Console.WriteLine($"Found available slot on {firstDate}, looking for slots for second shot...");
+				Console.WriteLine($"\tFound available slot on {firstDate}, looking for slots for second shot...");
 				for (var success = SelectNextAvailableSecondSlot(firstDate);
 					!success && SelectNextDay(GetDivXPathForShot(SecondShot));
 					)
@@ -101,7 +137,7 @@ namespace VaccinationAppointmentScheduler
 				}
 			}
 			else
-				Console.WriteLine($"No slots on {firstDate}");
+				Console.WriteLine($"\tNo slots on {firstDate}");
 
 			return false;
 		}
@@ -147,12 +183,16 @@ namespace VaccinationAppointmentScheduler
 			var secondDate = GetSelectedDate(secondDivXPath);
 			if (SelectNextAvailableSlot(SecondShot))
 			{
-				Console.WriteLine(
-					$"Congratulations! Reserved slots on {firstDate} and {secondDate}!");
-				_driver.FindElement(By.XPath("//button[contains(.,'Absenden')]")).Click();
-				return true;
+				if (_options.BookAppointment)
+				{
+					Console.WriteLine($"Congratulations! Reserved slots on {firstDate} and {secondDate}!");
+					_driver.FindElement(By.XPath("//button[contains(.,'Absenden')]")).Click();
+					return true;
+				}
+				Console.WriteLine($"Found available slots on {firstDate} and {secondDate}!");
+				return false;
 			}
-			Console.WriteLine($"\tNo slots for second shot on {secondDate}");
+			Console.WriteLine($"\t\tNo slots for second shot on {secondDate}");
 			return false;
 		}
 

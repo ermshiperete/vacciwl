@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
@@ -177,6 +178,13 @@ namespace VaccinationAppointmentScheduler
 			var goNext = _driver.WaitAndFindElement(By.XPath($"{divXPath}//button[@id = 'goNext']"));
 			if (goNext.IsDisabled())
 				return false;
+
+			var monthElement = _driver.WaitAndFindElement(By.XPath("//div[@class='calHeader']/span"));
+			var regex = new Regex("[0-9]+");
+			var year = regex.Match(monthElement.Text).Captures[0].Value;
+			if (int.Parse(year) > DateTime.Now.Year)
+				return false;
+
 			goNext.Click();
 			Thread.Sleep(500);
 			return true;

@@ -43,7 +43,11 @@ namespace VaccinationAppointmentScheduler
 
 			var manager = new VaccinationManager(options);
 			for (manager.Main(); options.Repeat; manager.Main())
+			{
+				manager.ShowStatistics();
 				Thread.Sleep(new TimeSpan(0, options.WaitTime, 0));
+			}
+			manager.ShowStatistics();
 		}
 
 		private static string ReadFromUser(string prompt, string oldValue)

@@ -96,6 +96,9 @@ namespace VaccinationAppointmentScheduler
 		[Option("wait", Default = 5, HelpText = "Wait time between checks in minutes")]
 		public int WaitTime { get; private set; }
 
+		[Option("statistics", HelpText = "Show statistics on console after run")]
+		public bool ShowStatistics { get; private set; }
+
 		private void RunOptions(Options options)
 		{
 			Debug = options.Debug;
@@ -106,6 +109,7 @@ namespace VaccinationAppointmentScheduler
 			Logfile = options.Logfile ?? Path.Combine(Path.GetTempPath(), "vacciwl.log");
 			Repeat = options.Repeat;
 			WaitTime = options.WaitTime;
+			ShowStatistics = options.ShowStatistics;
 		}
 
 		private string Value(string sectionName, string key, string defaultValue)

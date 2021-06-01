@@ -13,10 +13,12 @@ namespace VaccinationAppointmentScheduler
 {
 	public class VaccinationManager
 	{
-		private const    int           FirstShot  = 1;
-		private const    int           SecondShot = 2;
-		private          FirefoxDriver _driver;
-		private readonly Options       _options;
+		private const    int                            FirstShot  = 1;
+		private const    int                            SecondShot = 2;
+		private          FirefoxDriver                  _driver;
+		private readonly Options                        _options;
+		private readonly Dictionary<string, (int firstShotCount, int secondShotCount)> _statistics;
+		private          string                         _currentCenter;
 
 		public VaccinationManager(Options options)
 		{
@@ -30,6 +32,8 @@ namespace VaccinationAppointmentScheduler
 			}
 			else
 				Log = new FileLogger(_options.Logfile);
+
+			_statistics = new Dictionary<string, (int, int)>();
 		}
 
 		private ILog Log { get; }
@@ -98,7 +102,9 @@ namespace VaccinationAppointmentScheduler
 				Thread.Sleep(100);
 			}
 
-			Log.Message($"Checking {result.Text}:");
+			_currentCenter = result.Text;
+			Log.Message($"Checking {_currentCenter}:");
+			_statistics[_currentCenter] = (0, 0);
 			result.Click();
 		}
 
@@ -107,7 +113,9 @@ namespace VaccinationAppointmentScheduler
 			_driver.WaitAndFindElement(By.XPath("//a[contains(.,'Nachschlagen mit Liste')]")).Click();
 			var result = _driver.WaitAndFindElement(By.ClassName("select2-result-label"));
 
-			Log.Message($"Checking {result.Text}:");
+			_currentCenter = result.Text;
+			Log.Message($"Checking {_currentCenter}:");
+			_statistics[_currentCenter] = (0, 0);
 			result.Click();
 			return true;
 		}
@@ -121,7 +129,9 @@ namespace VaccinationAppointmentScheduler
 			if (previous.Text == result.Text)
 				return false;
 
-			Log.Message($"Checking {result.Text}:");
+			_currentCenter = result.Text;
+			Log.Message($"Checking {_currentCenter}:");
+			_statistics[_currentCenter] = (0, 0);
 			result.Click();
 			return true;
 		}
@@ -146,6 +156,8 @@ namespace VaccinationAppointmentScheduler
 			if (SelectNextAvailableSlot(FirstShot))
 			{
 				Log.Message($"\tFound available slot on {firstDate}, looking for slots for second shot...");
+				var (count1, count2) = _statistics[_currentCenter];
+				_statistics[_currentCenter] = (firstShotCount: count1++, secondShotCount: count2);
 				for (var success = SelectNextAvailableSecondSlot(firstDate);
 					!success && SelectNextDay(GetDivXPathForShot(SecondShot));
 					)
@@ -208,6 +220,8 @@ namespace VaccinationAppointmentScheduler
 			var secondDate = GetSelectedDate(secondDivXPath);
 			if (SelectNextAvailableSlot(SecondShot))
 			{
+				var (count1, count2) = _statistics[_currentCenter];
+				_statistics[_currentCenter] = (firstShotCount: count1, secondShotCount: count2++);
 				if (_options.BookAppointment)
 				{
 					Log.Message($"Congratulations! Reserved slots on {firstDate} and {secondDate}!");
@@ -236,6 +250,18 @@ namespace VaccinationAppointmentScheduler
 		private static string GetDivXPathForShot(int shotNumber)
 		{
 			return $"//div[contains(@class, 'dosage') and position() = {shotNumber}]";
+		}
+
+		public void ShowStatistics()
+		{
+			if (!_options.ShowStatistics)
+				return;
+
+			foreach (var center in _statistics.Keys)
+			{
+				var (firstShotCount, secondShotCount) = _statistics[center];
+				Console.WriteLine($"{center}: {secondShotCount} appointment days available ({firstShotCount} for first shot)");
+			}
 		}
 	}
 }

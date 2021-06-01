@@ -105,7 +105,7 @@ namespace VaccinationAppointmentScheduler
 			if (!_iniFile.TryGetValue(sectionName, out var section))
 				return defaultValue;
 
-			var value = section[key];
+			string value = section[key];
 			return string.IsNullOrEmpty(value) ? defaultValue : value;
 		}
 

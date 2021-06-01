@@ -1,11 +1,13 @@
+// Copyright (c) 2021 Eberhard Beilharz
+// This software is licensed under the MIT License (http://opensource.org/licenses/MIT)
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
+using VaccinationAppointmentScheduler.Logging;
 
 namespace VaccinationAppointmentScheduler
 {
@@ -20,9 +22,14 @@ namespace VaccinationAppointmentScheduler
 		{
 			_options = options;
 			if (_options.Verbose)
-				Log = new MultiLogger(new Logger(_options.Logfile));
+			{
+				Log = new MultiLogger(new ILog[] {
+					new FileLogger(_options.Logfile),
+					new ConsoleLogger()
+				});
+			}
 			else
-				Log = new Logger(_options.Logfile);
+				Log = new FileLogger(_options.Logfile);
 		}
 
 		private ILog Log { get; }

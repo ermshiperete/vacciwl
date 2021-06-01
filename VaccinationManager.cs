@@ -260,7 +260,7 @@ namespace VaccinationAppointmentScheduler
 			foreach (var center in _statistics.Keys)
 			{
 				var (firstShotCount, secondShotCount) = _statistics[center];
-				Console.WriteLine($"{center}: {secondShotCount} full/ {firstShotCount} first");
+				Console.WriteLine($"{secondShotCount}/{firstShotCount} {center}");
 			}
 		}
 	}

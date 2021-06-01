@@ -1,10 +1,11 @@
 ﻿// Copyright (c) 2021 Eberhard Beilharz
 // This software is licensed under the MIT License (http://opensource.org/licenses/MIT)
 using System;
+using System.Threading;
 
 namespace VaccinationAppointmentScheduler
 {
-	static class Program
+	internal static class Program
 	{
 		private static void Main(string[] args)
 		{
@@ -41,7 +42,8 @@ namespace VaccinationAppointmentScheduler
 			}
 
 			var manager = new VaccinationManager(options);
-			manager.Main();
+			for (manager.Main(); options.Repeat; manager.Main())
+				Thread.Sleep(new TimeSpan(0, options.WaitTime, 0));
 		}
 
 		private static string ReadFromUser(string prompt, string oldValue)

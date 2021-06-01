@@ -23,16 +23,6 @@ namespace VaccinationAppointmentScheduler
 			HelpRequested = result.Tag == ParserResultType.NotParsed;
 		}
 
-		private void RunOptions(Options options)
-		{
-			Debug = options.Debug;
-			CheckAllCenters = options.CheckAllCenters;
-			BookAppointment = options.BookAppointment;
-			HeadlessArg = options.HeadlessArg;
-			Verbose = options.Verbose;
-			Logfile = options.Logfile ?? Path.Combine(Path.GetTempPath(), "vacciwl.log");
-		}
-
 		private string Filename => Path.Combine(
 			Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
 			"vacciwl", "config.ini");
@@ -99,6 +89,24 @@ namespace VaccinationAppointmentScheduler
 
 		[Option("logfile", HelpText = "Logfile name and path")]
 		public string Logfile { get; private set; }
+
+		[Option('r', "repeat", HelpText = "Continuously check for appointments")]
+		public bool Repeat { get; private set; }
+
+		[Option("wait", Default = 5, HelpText = "Wait time between checks in minutes")]
+		public int WaitTime { get; private set; }
+
+		private void RunOptions(Options options)
+		{
+			Debug = options.Debug;
+			CheckAllCenters = options.CheckAllCenters;
+			BookAppointment = options.BookAppointment;
+			HeadlessArg = options.HeadlessArg;
+			Verbose = options.Verbose;
+			Logfile = options.Logfile ?? Path.Combine(Path.GetTempPath(), "vacciwl.log");
+			Repeat = options.Repeat;
+			WaitTime = options.WaitTime;
+		}
 
 		private string Value(string sectionName, string key, string defaultValue)
 		{

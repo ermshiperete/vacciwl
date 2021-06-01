@@ -16,7 +16,8 @@ namespace VaccinationAppointmentScheduler.Logging
 
 		public void Message(string msg)
 		{
-			_writer.WriteLine(msg);
+			var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
+			_writer.WriteLine($"{timestamp}: {msg}");
 			_writer.Flush();
 		}
 

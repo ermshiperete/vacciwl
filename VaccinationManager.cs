@@ -157,7 +157,7 @@ namespace VaccinationAppointmentScheduler
 			{
 				Log.Message($"\tFound available slot on {firstDate}, looking for slots for second shot...");
 				var (count1, count2) = _statistics[_currentCenter];
-				_statistics[_currentCenter] = (firstShotCount: count1++, secondShotCount: count2);
+				_statistics[_currentCenter] = (firstShotCount: count1 + 1, secondShotCount: count2);
 				for (var success = SelectNextAvailableSecondSlot(firstDate);
 					!success && SelectNextDay(GetDivXPathForShot(SecondShot));
 					)
@@ -260,7 +260,7 @@ namespace VaccinationAppointmentScheduler
 			foreach (var center in _statistics.Keys)
 			{
 				var (firstShotCount, secondShotCount) = _statistics[center];
-				Console.WriteLine($"{center}: {secondShotCount} appointment days available ({firstShotCount} for first shot)");
+				Console.WriteLine($"{center}: {secondShotCount} full/ {firstShotCount} first");
 			}
 		}
 	}

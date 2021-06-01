@@ -54,7 +54,7 @@ namespace VaccinationAppointmentScheduler
 
 		public string VaccinationCenter
 		{
-			get => Value("Settings", "VaccinationCenter", "siegen-wittgenstein");
+			get => Center ?? Value("Settings", "VaccinationCenter", "siegen-wittgenstein");
 			set => SetValue("Settings", "VaccinationCenter", value);
 		}
 
@@ -99,6 +99,9 @@ namespace VaccinationAppointmentScheduler
 		[Option("statistics", HelpText = "Show statistics on console after run")]
 		public bool ShowStatistics { get; private set; }
 
+		[Option("center", HelpText = "Vaccination center")]
+		public string Center { get; private set; }
+
 		private void RunOptions(Options options)
 		{
 			Debug = options.Debug;
@@ -110,6 +113,7 @@ namespace VaccinationAppointmentScheduler
 			Repeat = options.Repeat;
 			WaitTime = options.WaitTime;
 			ShowStatistics = options.ShowStatistics;
+			Center = options.Center;
 		}
 
 		private string Value(string sectionName, string key, string defaultValue)

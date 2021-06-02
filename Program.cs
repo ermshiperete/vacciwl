@@ -41,7 +41,7 @@ namespace VaccinationAppointmentScheduler
 				return;
 			}
 
-			var manager = new VaccinationManager(options);
+			using var manager = new VaccinationManager(options);
 			for (manager.Main(); options.Repeat; manager.Main())
 			{
 				manager.ShowStatistics();

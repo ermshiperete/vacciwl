@@ -11,7 +11,7 @@ using VaccinationAppointmentScheduler.Logging;
 
 namespace VaccinationAppointmentScheduler
 {
-	public class VaccinationManager
+	public class VaccinationManager: IDisposable
 	{
 		private const    int                            FirstShot  = 1;
 		private const    int                            SecondShot = 2;
@@ -37,6 +37,12 @@ namespace VaccinationAppointmentScheduler
 		}
 
 		private ILog Log { get; }
+
+		public void Dispose()
+		{
+			GC.SuppressFinalize(this);
+			Log.Dispose();
+		}
 
 		public void Main()
 		{
@@ -75,7 +81,6 @@ namespace VaccinationAppointmentScheduler
 				_driver.Close();
 				_driver.Quit();
 				_driver.Dispose();
-				Log.Dispose();
 			}
 		}
 

@@ -97,7 +97,7 @@ namespace VaccinationAppointmentScheduler
 
 		private void SelectVaccinationCenter(string vaccinationCenter)
 		{
-			_driver.WaitAndFindElement(By.XPath("//a[contains(.,'Nachschlagen mit Liste')]")).Click();
+			_driver.WaitAndFindElement(By.Id("s2id_sp_formfield_preferred_center")).Click();
 			_driver.WaitAndFindElement(By.Id("s2id_autogen8_search")).SendKeys(vaccinationCenter);
 			IWebElement result;
 			for (result = _driver.WaitAndFindElement(By.ClassName("select2-result-label"));
@@ -115,7 +115,7 @@ namespace VaccinationAppointmentScheduler
 
 		private bool SelectFirstVaccinationCenter()
 		{
-			_driver.WaitAndFindElement(By.XPath("//a[contains(.,'Nachschlagen mit Liste')]")).Click();
+			_driver.WaitAndFindElement(By.Id("s2id_sp_formfield_preferred_center")).Click();
 			var result = _driver.WaitAndFindElement(By.ClassName("select2-result-label"));
 
 			_currentCenter = result.Text;
